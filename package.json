@@ -1,5 +1,21 @@
 {
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },  
   "devDependencies": {
     "electron": "^28.0.0"
+  },
+  "build": {
+    "appId": "your.app.id",
+    "mac": {
+      "category": "your.app.category.type"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    }
   }
+  
 }
