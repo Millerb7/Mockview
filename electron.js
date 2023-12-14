@@ -10,6 +10,7 @@ let mainWindow;
 
 // Function to create the main window of the application
 function createWindow() {
+  console.log("creating window");
   // Create a new browser window
   mainWindow = new BrowserWindow({
     width: 800,  // window width
@@ -22,7 +23,7 @@ function createWindow() {
 
   // Load the index.html of the app (or a URL in case of a web app)
   mainWindow.loadURL(
-    isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`
+    isDev ? 'http://localhost:3000' : './mockview/public/index.html'
   );
 
   // Open DevTools - Remove this line if you don't want a dev console
