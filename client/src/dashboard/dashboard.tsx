@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useContext } from 'react';
+import Video from '../video/index'
 
-// const dashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
 
-//   return (<>
+  return (<>
+    <Video />
+  </>);
+};
 
-//   </>);
-// };
+export default Dashboard;
 
-// export default dashboard;
-
-export default function dashboard() {
-    return <div>
-    <div>n</div>
-    <div>n</div>
-    </div>;
-}
+// export default function dashboard() {
+//     return <div>
+//     <video />
+//     </div>;
+// }

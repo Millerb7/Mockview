@@ -14,6 +14,24 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import express from 'express';
+
+// Create an Express application
+const expressApp = express();
+
+// Define a route for Express
+expressApp.get('/', (req, res) => {
+  res.send('Hello from Express!');
+});
+
+// Choose a port for the Express server
+const PORT = 3000;
+
+// Start the Express server
+expressApp.listen(PORT, () => {
+  console.log(`Express server listening on port ${PORT}`);
+});
+
 
 class AppUpdater {
   constructor() {
