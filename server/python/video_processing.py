@@ -21,7 +21,7 @@ sio.connect('http://127.0.0.1:4000')
 cap = cv2.VideoCapture(0)  # Change '0' to your video source
 
 # Path to the default image
-default_image_path = './mock.jpg'  # Update this path
+default_image_path = 'mock.jpg'  # Update this path
 
 def get_default_image():
     # Load the default image
