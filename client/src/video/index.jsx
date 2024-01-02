@@ -14,7 +14,7 @@ function Video() {
     socket.current = socketIOClient(ENDPOINT);
     console.log("Connected to server");
 
-    socket.on('faceCount', (data) => {
+    socket.current.on('faceCount', (data) => {
       console.log(`Received new face value from client with id: ${socket.id}`, data);
       setFace(data);
     });
