@@ -5,6 +5,7 @@ const ENDPOINT = "http://127.0.0.1:4000";
 
 function Video() {
   const [stream, setStream] = useState(null);
+  const [face, setFace] = useState(0)
   const videoRef = useRef(null);
   const socket = useRef(null);
 
@@ -12,6 +13,11 @@ function Video() {
     // Initialize Socket.IO client
     socket.current = socketIOClient(ENDPOINT);
     console.log("Connected to server");
+
+    socket.on('faceCount', (data) => {
+      console.log(`Received new face value from client with id: ${socket.id}`, data);
+      setFace(data);
+    });
 
     // Request access to the user's camera
     navigator.mediaDevices.getUserMedia({ video: true })
@@ -62,7 +68,7 @@ function Video() {
   return (
     <div>
       <video ref={videoRef} style={{width: '100%'}} autoPlay muted />
-      {/* Display the video element */}
+      <p>{face ? "Face is present" : "Face is not present"}</p>
     </div>
   );
 }

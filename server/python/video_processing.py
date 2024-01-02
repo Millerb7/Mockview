@@ -1,8 +1,7 @@
-import base64
 import cv2
 import socketio
-import os
-import time
+import base64
+import numpy as np
 
 # Socket.IO client setup
 sio = socketio.Client()
@@ -15,48 +14,43 @@ def connect():
 def disconnect():
     print("Disconnected from the server")
 
+# Load the pre-trained Haar Cascade classifier for face detection
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+@sio.on('newFrame')
+def new_frame(data):
+    print("Received new frame.")
+
+    # Decode the image from base64
+    img_data = base64.b64decode(data.split(',')[1])
+    nparr = np.frombuffer(img_data, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # Convert to grayscale (Haar Cascade requires grayscale images)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Detect faces
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+    # Draw rectangles around the faces
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+
+    # If faces were detected, send the count back to the frontend
+    if len(faces) > 0:
+        sio.emit('faceCount', len(faces))
+
+    # If you want to send the processed image back to the frontend, encode and emit it
+    # _, buffer = cv2.imencode('.jpg', img)
+    # encoded_img = base64.b64encode(buffer).decode('utf-8')
+    # sio.emit('processedFrame', encoded_img)
+
 # Connect to the Socket.IO server
 sio.connect('http://127.0.0.1:4000')
 
-# Initialize your video capture device
-#cap = cv2.VideoCapture(0)  # Change '0' to your video source
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-image_path = os.path.join(script_dir, 'mock.jpg')
-print(f"Using default image path: {image_path}")
-
-def get_default_image():
-    # Load the default image
-    img = cv2.imread(image_path)
-    if img is not None:
-        return img
-    else:
-        print("Default image not found. Make sure the path is correct.")
-        return None
-
 try:
-    while True:
-        frame = get_default_image()
-        if frame is None:
-            break  # If no default image, exit the loop
-
-        # Perform your video processing here
-        processed_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        # Convert the frame to a format suitable for transmission
-        _, buffer = cv2.imencode('.jpg', processed_frame)
-        encoded_frame = base64.b64encode(buffer).decode('utf-8')
-
-        # Send the processed frame or default image to the server
-        sio.emit('newFrame', encoded_frame)
-
-        # Control the frame rate
-        time.sleep(10)  # Adjust as needed
+    sio.wait()
 except KeyboardInterrupt:
-    print("Interrupted by user")
-
+    print("Script interrupted by user")
 finally:
-    # Release resources and disconnect
-    print("Cleaning up and disconnecting...")
-    #cap.release()
     sio.disconnect()

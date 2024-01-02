@@ -29,21 +29,6 @@ io.on('connection', (socket) => {
   const pythonProcess = spawn('python', ['../server/python/video_processing.py']);  // Update the path to your Python script
   console.log('Python process started');
 
-  // Handle normal output
-  pythonProcess.stdout.on('data', (data) => {
-    console.log(`Python stdout: ${data}`);
-  });
-
-  // Handle error output
-  pythonProcess.stderr.on('data', (data) => {
-    console.error(`Python stderr: ${data}`);
-  });
-
-  // Handle on exit of the Python script
-  pythonProcess.on('close', (code) => {
-    console.log(`Python script exited with code ${code}`);
-  });
-
   // Handle custom events, like 'newFrame'
   socket.on('newFrame', (data) => {
     console.log(`Received new frame from client with id: ${socket.id}`);
