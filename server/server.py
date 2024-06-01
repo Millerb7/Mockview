@@ -1,39 +1,27 @@
-import os
-import time
 import tornado.ioloop
 import tornado.web
-import tornado.websocket
-import json
+import socketio
 
-class FileLocationWebSocket(tornado.websocket.WebSocketHandler):
-    def check_origin(self, origin):
-        # Allow cross-origin WebSocket requests
-        return True
+# Create a new Async Socket.IO server
+sio = socketio.AsyncServer(cors_allowed_origins='*', async_mode='tornado')
+app = tornado.web.Application([
+    (r"/socket.io/", socketio.get_tornado_handler(sio)),
+])
 
-    def open(self):
-        print("WebSocket opened")
+@sio.event
+async def connect(sid, environ):
+    print('connect ', sid)
 
-    def on_message(self, message):
-        data = json.loads(message)
-        file_path = data.get('filePath')
-        if file_path and os.path.exists(file_path):
-            # Simulate file processing
-            time.sleep(5)
-            response = {'status': 'success', 'filePath': file_path}
-            self.write_message(json.dumps(response))
-        else:
-            response = {'status': 'error', 'message': 'File not found'}
-            self.write_message(json.dumps(response))
+@sio.event
+async def disconnect(sid):
+    print('disconnect ', sid)
 
-    def on_close(self):
-        print("WebSocket closed")
+@sio.event
+async def fileLocation(sid, data):
+    print('Received file location: ', data)
+    response = {"status": "success", "filePath": "processed/file/path"}
+    await sio.emit('fileLocationResponse', response, to=sid)
 
-def make_app():
-    return tornado.web.Application([
-        (r"/fileLocation", FileLocationWebSocket),
-    ])
-
-if __name__ == "__main__":
-    app = make_app()
+if __name__ == '__main__':
     app.listen(4000)
     tornado.ioloop.IOLoop.current().start()

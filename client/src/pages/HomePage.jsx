@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button, Typography, Stack, Input, Box, CircularProgress, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -13,27 +13,7 @@ export const HomePage = () => {
   const [selectedFileName, setSelectedFileName] = useState("");
   const [uploadType, setUploadType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [backendIsUp, setBackendIsUp] = useState(false);
   const socket = useRef(null);
-
-  useEffect(() => {
-    socket.current = socketIOClient(ENDPOINT);
-    console.log("Connected to server");
-
-    socket.current.on('connect', () => {
-      console.log("WebSocket connected");
-      setBackendIsUp(true);
-    });
-
-    socket.current.on('disconnect', () => {
-      console.log("WebSocket disconnected");
-      setBackendIsUp(false);
-    });
-
-    return () => {
-      socket.current.disconnect();
-    };
-  }, []);
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files[0]) {
@@ -52,13 +32,29 @@ export const HomePage = () => {
   const handleUpload = () => {
     if (uploadType === "file" && selectedFile) {
       setIsLoading(true);
+
+      // Initialize the WebSocket connection
+      socket.current = socketIOClient(ENDPOINT);
+
+      socket.current.on('connect', () => {
+        console.log("WebSocket connected");
+      });
+
+      socket.current.on('disconnect', () => {
+        console.log("WebSocket disconnected");
+      });
+
       const fileLocation = selectedFile.path;
+
       socket.current.emit('fileLocation', { filePath: fileLocation }, (response) => {
         if (response.status === "success") {
           handleUploadSuccess(response);
         } else {
           handleUploadError(response.message);
         }
+
+        // Close the WebSocket connection
+        socket.current.disconnect();
       });
     } else {
       alert("Please select a file.");
@@ -137,7 +133,7 @@ export const HomePage = () => {
               size="large"
               variant="outlined"
               onClick={handleUpload}
-              disabled={isLoading || !backendIsUp}
+              disabled={isLoading}
             >
               Send file to the model
             </Button>
