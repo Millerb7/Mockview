@@ -1,5 +1,8 @@
 import pyaudio
 import wave
+import speech_recognition as sr
+from transformers import pipeline
+import spacy
 
 def record_audio(filename, duration):
     chunk = 1024
@@ -36,10 +39,6 @@ def record_audio(filename, duration):
     wf.writeframes(b''.join(frames))
     wf.close()
 
-record_audio('output.wav', 30)  # Record for 10 seconds
-
-import speech_recognition as sr
-
 def transcribe_audio(filename):
     recognizer = sr.Recognizer()
     audio_file = sr.AudioFile(filename)
@@ -55,43 +54,22 @@ def transcribe_audio(filename):
     except sr.RequestError as e:
         return f"Could not request results from Google Speech Recognition service; {e}"
 
-transcript = transcribe_audio('output.wav')
-
-# from transformers import pipeline
-
-# def summarize_text(text):
-#     summarizer = pipeline('summarization')
-#     summary = summarizer(text, max_length=150, min_length=50, do_sample=False)
-#     return summary[0]['summary_text']
-
-# summary = summarize_text(transcript)
-
-from transformers import pipeline
-
-# Load a smaller summarization model
-summarizer = pipeline('summarization', model="sshleifer/distilbart-cnn-12-6")
+def write_to_log(file_path, content):
+    with open(file_path, 'w') as log_file:
+        log_file.write(content)
 
 def summarize_text(text):
-    summary = summarizer(text, max_length=150, min_length=50, do_sample=False)
+    summarizer = pipeline('summarization', model="sshleifer/distilbart-cnn-12-6")
+    summary = summarizer(text, max_length=300, min_length=50, do_sample=False)
     return summary[0]['summary_text']
 
-# Example usage
-summary = summarize_text(transcript)
-print(summary)
-
-
-import spacy
-
-nlp = spacy.load("en_core_web_sm")
-
 def extract_entities(text):
+    nlp = spacy.load("en_core_web_sm")
     doc = nlp(text)
     entities = []
     for ent in doc.ents:
         entities.append((ent.text, ent.label_))
     return entities
-
-entities = extract_entities(transcript)
 
 def create_notes(summary, entities):
     notes = []
@@ -113,6 +91,23 @@ def create_notes(summary, entities):
 
     return ''.join(notes)
 
-notes = create_notes(summary, entities)
+# Recording audio
+# record_audio('output.wav', 30)  # Record for 30 seconds
 
+# Transcribing the audio and logging the result
+transcript = transcribe_audio('test.wav')
+write_to_log('transcript.log', transcript)  # Save the transcript to a log file
+print('script done')
+
+# Summarizing and extracting key points
+summary = summarize_text(transcript)
+entities = extract_entities(transcript)
+print('summary done')
+
+# Creating notes from summary and entities
+notes = create_notes(transcript, entities)
+print('notes done')
+
+# Output notes and log them as well
 print(notes)
+write_to_log('notes.log', notes)  # Save the notes to a separate log file
